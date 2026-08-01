@@ -1,0 +1,92 @@
+@use '../../styles/variables' as v;
+
+.layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 20px;
+  align-items: start;
+
+  @media (max-width: 800px) { grid-template-columns: 1fr; }
+}
+
+.tabList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: v.$radius-lg;
+  padding: 8px;
+
+  @media (max-width: 800px) { flex-direction: row; overflow-x: auto; }
+}
+
+.tabItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: v.$radius-sm;
+  background: transparent;
+  border: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: left;
+  white-space: nowrap;
+  transition: all v.$fast;
+
+  &:hover { background: var(--bg-hover); color: var(--text-primary); }
+  &.active { background: var(--primary-50); color: v.$primary; }
+}
+
+.sectionHeading { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+.sectionSub { font-size: 13px; color: var(--text-secondary); margin-bottom: 18px; }
+
+.logoUpload {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logoPreview {
+  width: 60px;
+  height: 60px;
+  border-radius: v.$radius-md;
+  background: var(--bg-hover);
+  border: 1px dashed var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.hint { font-size: 12px; color: var(--text-tertiary); margin-top: 6px; }
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border-soft);
+  &:last-of-type { border-bottom: none; }
+}
+
+.toggleTitle { font-size: 13.5px; font-weight: 600; color: var(--text-primary); }
+.toggleSub { font-size: 12.5px; color: var(--text-secondary); margin-top: 2px; }
+
+.dangerBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid v.$danger-light;
+  background: rgba(239,68,68,0.04);
+  border-radius: v.$radius-md;
+  flex-wrap: wrap;
+}
+
+[data-theme='dark'] .dangerBox { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.25); }

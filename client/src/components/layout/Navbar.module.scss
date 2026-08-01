@@ -1,0 +1,39 @@
+@use '../../styles/variables' as v;
+
+.navbar {
+  height: 66px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 24px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-soft);
+  position: sticky;
+  top: 0;
+  z-index: v.$z-navbar;
+
+  @media (max-width: 700px) { padding: 0 14px; gap: 10px; }
+}
+
+.menuBtn {
+  display: none;
+  width: 36px;
+  height: 36px;
+  border-radius: v.$radius-sm;
+  background: var(--bg-hover);
+  border: none;
+  color: var(--text-primary);
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  @media (max-width: 900px) { display: flex; }
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
