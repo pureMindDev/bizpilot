@@ -34,3 +34,11 @@ export const initials = (name = '') =>
   name.split(' ').filter(Boolean).slice(0, 2).map((n) => n[0]).join('').toUpperCase();
 
 export const uid = (prefix = 'id') => `${prefix}_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+
+// The backend groups monthly aggregations as "2026-07" strings; charts want
+// short labels like "Jul". Leaves anything that isn't that shape untouched.
+export const formatMonthLabel = (yyyyMM) => {
+  if (!/^\d{4}-\d{2}$/.test(yyyyMM || '')) return yyyyMM;
+  const [year, month] = yyyyMM.split('-');
+  return new Date(Number(year), Number(month) - 1, 1).toLocaleDateString('en-NG', { month: 'short' });
+};

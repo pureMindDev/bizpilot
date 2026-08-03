@@ -1,14 +1,16 @@
+import { useEffect, useState } from 'react';
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { FiBriefcase, FiCheckCircle, FiClock, FiXCircle, FiUsers, FiDollarSign, FiTrendingUp, FiCreditCard } from 'react-icons/fi';
 import { useBusinesses } from '../../../contexts/BusinessContext';
 import { usePayments } from '../../../contexts/PaymentContext';
 import { useSupport } from '../../../contexts/SupportContext';
 import { useAdminAuth } from '../../../contexts/AdminAuthContext';
-import { formatCurrency } from '../../../utils/format';
+import { adminApi } from '../../../services/api';
+import { formatCurrency, formatMonthLabel } from '../../../utils/format';
 import StatCard from '../../dashboard/components/StatCard';
 import ChartCard from '../../dashboard/components/ChartCard';
 import { LatestBusinessesWidget, RecentPaymentsWidget, RecentTicketsWidget, PlatformActivityWidget } from './components/AdminWidgets';
-import { getBusinessGrowth, getRevenueGrowth, getPlanDistribution, getMonthlySignups } from './adminDashboardUtils';
+import { getPlanDistribution } from './adminDashboardUtils';
 
 const PLAN_COLORS = ['#64748B', '#2563EB', '#7C3AED'];
 
@@ -18,10 +20,23 @@ export default function AdminDashboard() {
   const { tickets } = useSupport();
   const { admin } = useAdminAuth();
 
-  const businessGrowth = getBusinessGrowth(businesses);
-  const revenueGrowth = getRevenueGrowth(payments);
+  const [businessGrowth, setBusinessGrowth] = useState([]);
+  const [revenueGrowth, setRevenueGrowth] = useState([]);
+  const [monthlySignups, setMonthlySignups] = useState([]);
+
+  useEffect(() => {
+    Promise.all([
+      adminApi.get('/admin/dashboard/business-growth'),
+      adminApi.get('/admin/payments/revenue-growth'),
+      adminApi.get('/admin/dashboard/monthly-signups'),
+    ]).then(([growthRes, revenueRes, signupsRes]) => {
+      setBusinessGrowth(growthRes.data.data.map((r) => ({ ...r, month: formatMonthLabel(r.month) })));
+      setRevenueGrowth(revenueRes.data.data.map((r) => ({ ...r, month: formatMonthLabel(r.month) })));
+      setMonthlySignups(signupsRes.data.data.map((r) => ({ ...r, month: formatMonthLabel(r.month) })));
+    });
+  }, []);
+
   const planDistribution = getPlanDistribution(businesses);
-  const monthlySignups = getMonthlySignups();
   const activeSubscriptions = businesses.filter((b) => b.status === 'Active' || b.status === 'Trial').length;
 
   const sortedBusinesses = [...businesses].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));

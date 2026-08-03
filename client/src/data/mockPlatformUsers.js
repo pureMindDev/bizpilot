@@ -3,7 +3,6 @@ import { mockBusinesses } from './mockBusinesses';
 const firstNames = ['Tobi', 'Chiamaka', 'Suleiman', 'Faith', 'Obinna', 'Zainab', 'Wale', 'Precious', 'Ahmed', 'Ruth', 'Chukwuemeka', 'Fatima', 'Gbenga', 'Esther', 'Yakubu'];
 const lastNames = ['Adewale', 'Nnamdi', 'Garba', 'Okon', 'Chukwuma', 'Lawal', 'Adisa', 'Umoh', 'Sani', 'Ekwueme'];
 const roles = ['Owner', 'Manager', 'Cashier', 'Sales Rep', 'Inventory Officer'];
-const statuses = ['active', 'suspended'];
 
 export const mockPlatformUsers = Array.from({ length: 26 }).map((_, i) => {
   const biz = mockBusinesses[i % mockBusinesses.length];

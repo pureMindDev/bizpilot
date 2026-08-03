@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { FiSearch, FiFileText, FiMonitor } from 'react-icons/fi';
 import { useAuditLogs } from '../../../contexts/AuditLogContext';
 import { formatDateTime } from '../../../utils/format';
@@ -6,15 +6,9 @@ import EmptyState from '../../../components/common/EmptyState';
 import TableSkeleton from '../../../components/common/TableSkeleton';
 
 export default function AuditLogs() {
-  const { logs, categories } = useAuditLogs();
-  const [loading, setLoading] = useState(true);
+  const { logs, categories, loading } = useAuditLogs();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
-
-  useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 450);
-    return () => clearTimeout(t);
-  }, []);
 
   const filtered = useMemo(() => {
     return logs.filter((l) => {

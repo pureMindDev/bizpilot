@@ -9,7 +9,7 @@ export const listTickets = asyncHandler(async (req, res) => {
   if (status !== 'All') filter.status = status;
 
   const tickets = await Ticket.find(filter).populate('business', 'name').sort({ updatedAt: -1 });
-  let data = tickets.map((t) => ({ ...t.toObject(), business: t.business?.name || 'Unknown', businessId: t.business?._id?.toString() || null }));
+  let data = tickets.map((t) => ({ ...t.toObject(), business: t.business?.name || 'Unknown' }));
   if (search) {
     const q = search.toLowerCase();
     data = data.filter((t) => t.subject.toLowerCase().includes(q) || t.business.toLowerCase().includes(q));

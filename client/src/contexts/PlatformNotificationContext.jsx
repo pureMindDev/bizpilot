@@ -1,24 +1,28 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import api from '../services/api';
+import { adminApi } from '../services/api';
 import { extractErrorMessage } from '../utils/apiError';
-import { withIds } from '../utils/normalize';
+import { withId } from '../utils/normalize';
 import { useAdminAuth } from './AdminAuthContext';
 
 const PlatformNotificationContext = createContext();
 
-// The UI renders `time`; the API stores it as createdAt.
-const mapNotification = (doc) => ({ ...doc, id: doc._id ?? doc.id, time: doc.time || doc.createdAt });
+const mapNotification = (doc) => {
+  const withIdDoc = withId(doc);
+  return { ...withIdDoc, time: withIdDoc.time || withIdDoc.createdAt };
+};
 
 export function PlatformNotificationProvider({ children }) {
   const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const { isAdminAuthenticated, loading: authLoading } = useAdminAuth();
 
   const fetchNotifications = async () => {
     try {
-      const res = await api.get('/admin/notifications');
-      setNotifications(withIds(res.data.data).map(mapNotification));
+      const res = await adminApi.get('/admin/notifications');
+      setNotifications(res.data.data.map(mapNotification));
+      setUnreadCount(res.data.unreadCount);
     } catch (err) {
       toast.error(extractErrorMessage(err));
     } finally {
@@ -30,6 +34,7 @@ export function PlatformNotificationProvider({ children }) {
     if (authLoading) return;
     if (!isAdminAuthenticated) {
       setNotifications([]);
+      setUnreadCount(0);
       setLoading(false);
       return;
     }
@@ -37,42 +42,40 @@ export function PlatformNotificationProvider({ children }) {
     fetchNotifications();
   }, [isAdminAuthenticated, authLoading]);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
   const markAsRead = async (id) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
     try {
-      await api.patch(`/admin/notifications/${id}/read`);
+      const res = await adminApi.patch(`/admin/notifications/${id}/read`);
+      setNotifications((prev) => prev.map((n) => (n.id === id ? mapNotification(res.data.data) : n)));
+      setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (err) {
       toast.error(extractErrorMessage(err));
-      fetchNotifications();
     }
   };
 
   const markAllAsRead = async () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     try {
-      await api.patch('/admin/notifications/read-all');
+      await adminApi.patch('/admin/notifications/read-all');
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      setUnreadCount(0);
     } catch (err) {
       toast.error(extractErrorMessage(err));
-      fetchNotifications();
     }
   };
 
   const deleteNotification = async (id) => {
-    const previous = notifications;
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
     try {
-      await api.delete(`/admin/notifications/${id}`);
+      const target = notifications.find((n) => n.id === id);
+      await adminApi.delete(`/admin/notifications/${id}`);
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      if (target && !target.read) setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (err) {
       toast.error(extractErrorMessage(err));
-      setNotifications(previous);
     }
   };
 
   return (
     <PlatformNotificationContext.Provider
-      value={{ notifications, loading, unreadCount, markAsRead, markAllAsRead, deleteNotification, refetch: fetchNotifications }}
+      value={{ notifications, unreadCount, loading, markAsRead, markAllAsRead, deleteNotification, refetch: fetchNotifications }}
     >
       {children}
     </PlatformNotificationContext.Provider>

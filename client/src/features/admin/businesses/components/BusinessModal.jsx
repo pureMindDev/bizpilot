@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import Modal from '../../../../components/common/Modal';
 import Button from '../../../../components/common/Button';
 import { useBusinesses } from '../../../../contexts/BusinessContext';
+import { extractErrorMessage } from '../../../../utils/apiError';
 
 export default function BusinessModal({ open, onClose, business }) {
   const { updateBusiness, plans, statuses, cities } = useBusinesses();
@@ -16,11 +17,15 @@ export default function BusinessModal({ open, onClose, business }) {
 
   const onSubmit = async (data) => {
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 450));
-    updateBusiness(business.id, data);
-    toast.success('Business updated');
-    setSaving(false);
-    onClose();
+    try {
+      await updateBusiness(business.id, data);
+      toast.success('Business updated');
+      onClose();
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (!business) return null;

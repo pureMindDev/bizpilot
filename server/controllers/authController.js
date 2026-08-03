@@ -4,8 +4,8 @@ import Notification from '../models/Notification.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { signBusinessToken } from '../services/tokenService.js';
-import { sendVerificationEmail } from '../services/emailService.js';
-import { generateVerificationCode, VERIFICATION_CODE_TTL_MS } from '../utils/verificationCode.js';
+import { sendVerificationEmail, sendPasswordResetEmail } from '../services/emailService.js';
+import { generateVerificationCode, VERIFICATION_CODE_TTL_MS, PASSWORD_RESET_CODE_TTL_MS } from '../utils/verificationCode.js';
 
 const sendAuthResponse = (res, statusCode, staff, business) => {
   const token = signBusinessToken({ id: staff._id.toString(), businessId: business._id.toString() });
@@ -157,23 +157,43 @@ export const getMe = asyncHandler(async (req, res) => {
   });
 });
 
-// POST /api/auth/forgot-password — issues a mock reset flow (email delivery is out of scope for this API)
+// POST /api/auth/forgot-password — emails a 6-digit reset code (same pattern as
+// email verification). Always responds with the same generic message regardless
+// of whether the account exists, so this endpoint can't be used to enumerate
+// registered emails.
 export const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
   if (!email) throw ApiError.badRequest('Email is required');
   const staff = await Staff.findOne({ email: email.toLowerCase() });
-  // Always respond success to avoid leaking which emails are registered.
-  res.json({ success: true, message: 'If that email exists, a reset link has been sent.', devHint: staff ? 'Account found' : 'No account found' });
+
+  if (staff) {
+    const code = generateVerificationCode();
+    staff.resetCode = code;
+    staff.resetCodeExpires = new Date(Date.now() + PASSWORD_RESET_CODE_TTL_MS);
+    await staff.save();
+    await sendPasswordResetEmail({ to: staff.email, name: staff.name, code });
+  }
+
+  res.json({ success: true, message: 'If that email exists, a reset code has been sent.' });
 });
 
-// POST /api/auth/reset-password
+// POST /api/auth/reset-password — requires the 6-digit code emailed by forgot-password.
 export const resetPassword = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password || password.length < 6) throw ApiError.badRequest('Valid email and a password of at least 6 characters are required');
-  const staff = await Staff.findOne({ email: email.toLowerCase() });
-  if (!staff) throw ApiError.notFound('Account not found');
+  const { email, code, password } = req.body;
+  if (!email || !code || !password || password.length < 6) {
+    throw ApiError.badRequest('Email, reset code, and a password of at least 6 characters are required');
+  }
+
+  const staff = await Staff.findOne({ email: email.toLowerCase() }).select('+resetCode +resetCodeExpires');
+  if (!staff || !staff.resetCode || staff.resetCode !== code) throw ApiError.badRequest('Incorrect or expired reset code');
+  if (staff.resetCodeExpires < new Date()) throw ApiError.badRequest('This code has expired. Please request a new one.');
+
   staff.passwordHash = await Staff.hashPassword(password);
+  staff.resetCode = undefined;
+  staff.resetCodeExpires = undefined;
+  staff.activity.unshift({ action: 'Reset password' });
   await staff.save();
+
   res.json({ success: true, message: 'Password reset successfully' });
 });
 

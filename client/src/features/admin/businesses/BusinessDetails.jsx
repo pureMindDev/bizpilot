@@ -8,6 +8,7 @@ import {
 import { useBusinesses } from '../../../contexts/BusinessContext';
 import { usePayments } from '../../../contexts/PaymentContext';
 import { formatCurrency, formatDate, timeAgo, initials } from '../../../utils/format';
+import { extractErrorMessage } from '../../../utils/apiError';
 import EmptyState from '../../../components/common/EmptyState';
 import Modal from '../../../components/common/Modal';
 import Button from '../../../components/common/Button';
@@ -36,15 +37,23 @@ export default function BusinessDetails() {
     );
   }
 
-  const confirmDelete = () => {
-    deleteBusiness(business.id);
-    toast.success('Business deleted');
-    navigate('/admin/businesses');
+  const confirmDelete = async () => {
+    try {
+      await deleteBusiness(business.id);
+      toast.success('Business deleted');
+      navigate('/admin/businesses');
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    }
   };
 
-  const toggleStatus = () => {
-    if (business.status === 'Suspended') { activateBusiness(business.id); toast.success(`${business.name} activated`); }
-    else { suspendBusiness(business.id); toast.success(`${business.name} suspended`); }
+  const toggleStatus = async () => {
+    try {
+      if (business.status === 'Suspended') { await activateBusiness(business.id); toast.success(`${business.name} activated`); }
+      else { await suspendBusiness(business.id); toast.success(`${business.name} suspended`); }
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    }
   };
 
   return (

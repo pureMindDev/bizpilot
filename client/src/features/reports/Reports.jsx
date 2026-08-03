@@ -1,10 +1,9 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { FiDownload, FiFileText, FiTrendingUp, FiDollarSign, FiTrendingDown } from 'react-icons/fi';
 import { useSales } from '../../contexts/SalesContext';
-import api from '../../services/api';
-import { extractErrorMessage } from '../../utils/apiError';
+import { mockExpenses } from '../../data/mockExpenses';
 import { formatCurrency } from '../../utils/format';
 import { getRevenueOverview, getTopProducts } from '../dashboard/dashboardUtils';
 import StatCard from '../dashboard/components/StatCard';
@@ -15,20 +14,9 @@ const PERIODS = ['Daily', 'Weekly', 'Monthly', 'Yearly'];
 export default function Reports() {
   const { sales } = useSales();
   const [period, setPeriod] = useState('Monthly');
-  const [expenses, setExpenses] = useState([]);
-
-  // Expenses are not held in a shared context, so the report pulls them directly.
-  useEffect(() => {
-    let active = true;
-    api
-      .get('/expenses')
-      .then((res) => { if (active) setExpenses(res.data.data); })
-      .catch((err) => toast.error(extractErrorMessage(err)));
-    return () => { active = false; };
-  }, []);
 
   const totalRevenue = sales.reduce((sum, s) => sum + s.total, 0);
-  const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const totalExpenses = mockExpenses.reduce((sum, e) => sum + e.amount, 0);
   const profit = totalRevenue - totalExpenses;
 
   const revenueOverview = useMemo(() => getRevenueOverview(sales), [sales]);

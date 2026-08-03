@@ -26,6 +26,7 @@ import adminAuthRoutes from './routes/adminAuthRoutes.js';
 import adminBusinessRoutes from './routes/adminBusinessRoutes.js';
 import planRoutes from './routes/planRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
+import paymentWebhookRoutes from './routes/paymentWebhookRoutes.js';
 import platformUserRoutes from './routes/platformUserRoutes.js';
 import ticketRoutes from './routes/ticketRoutes.js';
 import auditLogRoutes from './routes/auditLogRoutes.js';
@@ -36,9 +37,19 @@ import adminDashboardRoutes from './routes/adminDashboardRoutes.js';
 
 const app = express();
 
+// Deployment platforms (Render, Railway, Fly, Heroku, etc.) sit one reverse
+// proxy in front of the app. Without this, every request's req.ip resolves to
+// the proxy's IP — collapsing the auth rate limiter into one shared bucket for
+// all users, and making audit-log IPs useless. Only trusted in production
+// since local dev has no proxy in front of it.
+if (env.nodeEnv === 'production') app.set('trust proxy', 1);
+
 app.use(helmet());
 app.use(cors({ origin: env.clientUrl, credentials: true }));
-app.use(express.json({ limit: '2mb' }));
+// Stashes the raw request bytes on req.rawBody as express.json parses — needed
+// because webhook signature verification (Paystack) must hash the exact bytes
+// sent, not a re-serialized copy of the parsed object.
+app.use(express.json({ limit: '2mb', verify: (req, res, buf) => { req.rawBody = buf; } }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 if (env.nodeEnv !== 'test') app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
@@ -72,6 +83,7 @@ app.use('/api/admin/auth', adminAuthRoutes);
 app.use('/api/admin/businesses', adminBusinessRoutes);
 app.use('/api/admin/plans', planRoutes);
 app.use('/api/admin/payments', paymentRoutes);
+app.use('/api/webhooks', paymentWebhookRoutes);
 app.use('/api/admin/users', platformUserRoutes);
 app.use('/api/admin/tickets', ticketRoutes);
 app.use('/api/admin/audit-logs', auditLogRoutes);

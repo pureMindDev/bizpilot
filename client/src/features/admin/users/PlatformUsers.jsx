@@ -1,8 +1,9 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { FiSearch, FiUsers, FiUserCheck, FiUserX, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { usePlatformUsers } from '../../../contexts/PlatformUserContext';
 import { initials, formatDate } from '../../../utils/format';
+import { extractErrorMessage } from '../../../utils/apiError';
 import EmptyState from '../../../components/common/EmptyState';
 import TableSkeleton from '../../../components/common/TableSkeleton';
 import Modal from '../../../components/common/Modal';
@@ -13,18 +14,12 @@ const PAGE_SIZE = 8;
 const ROLES = ['Owner', 'Manager', 'Cashier', 'Sales Rep', 'Inventory Officer'];
 
 export default function PlatformUsers() {
-  const { users, suspendUser, deleteUser } = usePlatformUsers();
-  const [loading, setLoading] = useState(true);
+  const { users, suspendUser, deleteUser, loading } = usePlatformUsers();
   const [search, setSearch] = useState('');
   const [role, setRole] = useState('All');
   const [page, setPage] = useState(1);
   const [drawerUser, setDrawerUser] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
-
-  useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 450);
-    return () => clearTimeout(t);
-  }, []);
 
   const filtered = useMemo(() => {
     return users.filter((u) => {
@@ -37,17 +32,25 @@ export default function PlatformUsers() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const handleSuspend = (u) => {
-    suspendUser(u.id);
-    toast.success(u.status === 'suspended' ? `${u.name} activated` : `${u.name} suspended`);
-    setDrawerUser(null);
+  const handleSuspend = async (u) => {
+    try {
+      await suspendUser(u.id);
+      toast.success(u.status === 'suspended' ? `${u.name} activated` : `${u.name} suspended`);
+      setDrawerUser(null);
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    }
   };
 
-  const confirmDelete = () => {
-    deleteUser(deleteTarget.id);
-    toast.success('User deleted');
-    setDeleteTarget(null);
-    setDrawerUser(null);
+  const confirmDelete = async () => {
+    try {
+      await deleteUser(deleteTarget.id);
+      toast.success('User deleted');
+      setDeleteTarget(null);
+      setDrawerUser(null);
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    }
   };
 
   return (

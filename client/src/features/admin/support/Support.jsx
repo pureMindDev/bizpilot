@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { FiSearch, FiHeadphones } from 'react-icons/fi';
 import { useSupport } from '../../../contexts/SupportContext';
 import { timeAgo } from '../../../utils/format';
@@ -10,17 +10,11 @@ const PRIORITY_TONE = { Low: 'neutral', Medium: 'info', High: 'warning', Urgent:
 const STATUS_TONE = { Open: 'info', 'In Progress': 'warning', Resolved: 'success', Closed: 'neutral' };
 
 export default function Support() {
-  const { tickets, priorities, statuses } = useSupport();
-  const [loading, setLoading] = useState(true);
+  const { tickets, priorities, statuses, loading } = useSupport();
   const [search, setSearch] = useState('');
   const [priority, setPriority] = useState('All');
   const [status, setStatus] = useState('All');
   const [activeTicket, setActiveTicket] = useState(null);
-
-  useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 450);
-    return () => clearTimeout(t);
-  }, []);
 
   const filtered = useMemo(() => {
     return tickets.filter((t) => {

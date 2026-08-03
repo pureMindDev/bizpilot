@@ -13,6 +13,8 @@ const staffSchema = new mongoose.Schema(
     emailVerified: { type: Boolean, default: false },
     verificationCode: { type: String, select: false },
     verificationCodeExpires: { type: Date, select: false },
+    resetCode: { type: String, select: false },
+    resetCodeExpires: { type: Date, select: false },
     lastActive: { type: Date, default: Date.now },
     activity: { type: [{ action: String, time: { type: Date, default: Date.now } }], default: [] },
   },

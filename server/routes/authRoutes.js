@@ -16,7 +16,12 @@ router.post('/login', [body('email').isEmail(), body('password').notEmpty()], va
 router.post('/verify-email', [body('email').isEmail(), body('code').isLength({ min: 6, max: 6 })], validate, verifyEmail);
 router.post('/resend-verification', [body('email').isEmail()], validate, resendVerification);
 router.post('/forgot-password', [body('email').isEmail()], validate, forgotPassword);
-router.post('/reset-password', [body('email').isEmail(), body('password').isLength({ min: 6 })], validate, resetPassword);
+router.post(
+  '/reset-password',
+  [body('email').isEmail(), body('code').isLength({ min: 6, max: 6 }), body('password').isLength({ min: 6 })],
+  validate,
+  resetPassword
+);
 router.get('/me', protectBusiness, getMe);
 router.post(
   '/change-password',

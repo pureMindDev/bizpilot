@@ -1,9 +1,10 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { FiSearch, FiBriefcase, FiEye, FiEdit2, FiTrash2, FiPause, FiPlay, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useBusinesses } from '../../../contexts/BusinessContext';
 import { formatCurrency, formatDate, initials } from '../../../utils/format';
+import { extractErrorMessage } from '../../../utils/apiError';
 import EmptyState from '../../../components/common/EmptyState';
 import TableSkeleton from '../../../components/common/TableSkeleton';
 import Modal from '../../../components/common/Modal';
@@ -15,9 +16,8 @@ const PAGE_SIZE = 8;
 const STATUS_TONE = { Active: 'success', Trial: 'info', Expired: 'warning', Suspended: 'danger' };
 
 export default function Businesses() {
-  const { businesses, plans, statuses, suspendBusiness, activateBusiness, deleteBusiness } = useBusinesses();
+  const { businesses, plans, statuses, suspendBusiness, activateBusiness, deleteBusiness, loading } = useBusinesses();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [plan, setPlan] = useState('All');
   const [status, setStatus] = useState('All');
@@ -26,11 +26,6 @@ export default function Businesses() {
   const [modalOpen, setModalOpen] = useState(false);
   const [drawerBusiness, setDrawerBusiness] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
-
-  useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 450);
-    return () => clearTimeout(t);
-  }, []);
 
   const filtered = useMemo(() => {
     return businesses.filter((b) => {
@@ -46,16 +41,24 @@ export default function Businesses() {
 
   const openEdit = (b) => { setDrawerBusiness(null); setEditingBusiness(b); setModalOpen(true); };
 
-  const confirmDelete = () => {
-    deleteBusiness(deleteTarget.id);
-    toast.success('Business deleted');
-    setDeleteTarget(null);
-    setDrawerBusiness(null);
+  const confirmDelete = async () => {
+    try {
+      await deleteBusiness(deleteTarget.id);
+      toast.success('Business deleted');
+      setDeleteTarget(null);
+      setDrawerBusiness(null);
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    }
   };
 
-  const toggleStatus = (b) => {
-    if (b.status === 'Suspended') { activateBusiness(b.id); toast.success(`${b.name} activated`); }
-    else { suspendBusiness(b.id); toast.success(`${b.name} suspended`); }
+  const toggleStatus = async (b) => {
+    try {
+      if (b.status === 'Suspended') { await activateBusiness(b.id); toast.success(`${b.name} activated`); }
+      else { await suspendBusiness(b.id); toast.success(`${b.name} suspended`); }
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    }
   };
 
   return (

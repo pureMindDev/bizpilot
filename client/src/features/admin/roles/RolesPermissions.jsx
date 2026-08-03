@@ -1,9 +1,26 @@
 import { FiCheck, FiX, FiShield } from 'react-icons/fi';
 import { useAdminRoles } from '../../../contexts/AdminRoleContext';
 import { initials } from '../../../utils/format';
+import EmptyState from '../../../components/common/EmptyState';
 
 export default function RolesPermissions() {
-  const { matrix, team, modules, roles, togglePermission } = useAdminRoles();
+  const { matrix, team, modules, roles, togglePermission, loading } = useAdminRoles();
+
+  if (loading) {
+    return (
+      <div className="page-container">
+        <div className="page-header">
+          <div>
+            <h1>Roles & Permissions</h1>
+            <p>Manage what each Super Admin team role can access</p>
+          </div>
+        </div>
+        <div className="card" style={{ padding: 40 }}>
+          <EmptyState title="Loading permissions..." message="" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page-container">
@@ -58,12 +75,12 @@ export default function RolesPermissions() {
                           onClick={() => togglePermission(role, m, key)}
                           style={{
                             width: 26, height: 26, borderRadius: 7, border: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                            background: matrix[role][m][key] ? 'var(--success-light, #DCFCE7)' : 'var(--bg-hover)',
-                            color: matrix[role][m][key] ? '#15803D' : 'var(--text-tertiary)',
+                            background: matrix[role]?.[m]?.[key] ? 'var(--success-light, #DCFCE7)' : 'var(--bg-hover)',
+                            color: matrix[role]?.[m]?.[key] ? '#15803D' : 'var(--text-tertiary)',
                             cursor: role === 'Super Admin' ? 'default' : 'pointer',
                           }}
                         >
-                          {matrix[role][m][key] ? <FiCheck size={14} /> : <FiX size={14} />}
+                          {matrix[role]?.[m]?.[key] ? <FiCheck size={14} /> : <FiX size={14} />}
                         </button>
                       </td>
                     ))}

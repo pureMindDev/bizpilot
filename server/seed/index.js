@@ -99,7 +99,7 @@ const seedBusinessDeep = async (name, owner, index, plans) => {
   // Owner staff account (password: bizpilot123 for every seeded account).
   // emailVerified: true since these are demo accounts with no real inbox to check.
   const passwordHash = await Staff.hashPassword('bizpilot123');
-  const ownerStaff = await Staff.create({
+  await Staff.create({
     business: business._id,
     name: owner,
     email: business.email,

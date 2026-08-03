@@ -3,7 +3,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import Modal from '../../../components/common/Modal';
 import Button from '../../../components/common/Button';
-import { expenseCategories } from '../../../data/options';
+import { expenseCategories } from '../../../data/mockExpenses';
 import { extractErrorMessage } from '../../../utils/apiError';
 
 export default function ExpenseModal({ open, onClose, onSave, expense }) {

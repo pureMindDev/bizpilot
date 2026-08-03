@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import api from '../services/api';
 import { extractErrorMessage } from '../utils/apiError';
 import { withId } from '../utils/normalize';
-import { roles, rolePermissions } from '../data/options';
+import { roles, rolePermissions } from '../data/mockStaff';
 import { useAuth } from './AuthContext';
 
 const StaffContext = createContext();

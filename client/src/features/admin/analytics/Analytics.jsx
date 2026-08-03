@@ -1,9 +1,9 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useBusinesses } from '../../../contexts/BusinessContext';
-import { usePayments } from '../../../contexts/PaymentContext';
-import { formatCurrency } from '../../../utils/format';
-import { getRevenueGrowth, getMonthlySignups, getPlanDistribution } from '../dashboard/adminDashboardUtils';
+import { adminApi } from '../../../services/api';
+import { formatCurrency, formatMonthLabel } from '../../../utils/format';
+import { getPlanDistribution } from '../dashboard/adminDashboardUtils';
 import ChartCard from '../../dashboard/components/ChartCard';
 
 const PLAN_COLORS = ['#64748B', '#2563EB', '#7C3AED'];
@@ -12,12 +12,24 @@ const BUSINESS_TYPES = ['Retail', 'Wholesale', 'Services', 'Fashion', 'Electroni
 
 export default function Analytics() {
   const { businesses } = useBusinesses();
-  const { payments } = usePayments();
+  const [revenueGrowth, setRevenueGrowth] = useState([]);
+  const [monthlySignups, setMonthlySignups] = useState([]);
 
-  const revenueGrowth = useMemo(() => getRevenueGrowth(payments), [payments]);
-  const monthlySignups = useMemo(() => getMonthlySignups(), []);
+  useEffect(() => {
+    Promise.all([
+      adminApi.get('/admin/payments/revenue-growth'),
+      adminApi.get('/admin/dashboard/monthly-signups'),
+    ]).then(([revenueRes, signupsRes]) => {
+      setRevenueGrowth(revenueRes.data.data.map((r) => ({ ...r, month: formatMonthLabel(r.month) })));
+      setMonthlySignups(signupsRes.data.data.map((r) => ({ ...r, month: formatMonthLabel(r.month) })));
+    });
+  }, []);
+
   const planDistribution = useMemo(() => getPlanDistribution(businesses), [businesses]);
 
+  // The Business model has no "industry" field yet, so this can't be real
+  // data without a schema change — labeled as an estimate rather than
+  // silently presenting a fabricated chart as if it were measured.
   const businessTypes = useMemo(() => BUSINESS_TYPES.map((name, i) => ({ name, value: Math.floor(businesses.length / BUSINESS_TYPES.length) + (i % 2) })), [businesses]);
 
   const forecast = useMemo(() => {
@@ -26,12 +38,15 @@ export default function Analytics() {
     return [...revenueGrowth, ...months.map((month, i) => ({ month, revenue: Math.round(base * (1 + (i + 1) * 0.08)), forecast: true }))];
   }, [revenueGrowth]);
 
+  // No session/activity-tracking system exists yet to back this with real
+  // numbers — same as businessTypes, labeled as an estimate rather than
+  // presented as measured data.
   const userActivity = useMemo(() => {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     return days.map((day) => ({ day, active: Math.floor(Math.random() * 60) + 40 }));
   }, []);
 
-  const topBusinesses = useMemo(() => [...businesses].sort((a, b) => b.totalSales - a.totalSales).slice(0, 6), [businesses]);
+  const topBusinesses = useMemo(() => [...businesses].sort((a, b) => (b.totalSales || 0) - (a.totalSales || 0)).slice(0, 6), [businesses]);
 
   return (
     <div className="page-container">
@@ -80,7 +95,7 @@ export default function Analytics() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Business types" subtitle="Distribution by industry" delay={0.12}>
+        <ChartCard title="Business types" subtitle="Estimated distribution by industry (no industry field tracked yet)" delay={0.12}>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
               <Pie data={businessTypes} dataKey="value" nameKey="name" cx="50%" cy="48%" innerRadius={54} outerRadius={82} paddingAngle={3}>
@@ -111,7 +126,7 @@ export default function Analytics() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="User activity" subtitle="Active users this week" delay={0.2}>
+        <ChartCard title="User activity" subtitle="Estimated — no session tracking yet" delay={0.2}>
           <ResponsiveContainer width="100%" height={230}>
             <LineChart data={userActivity} margin={{ left: -18, top: 6 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-soft)" />

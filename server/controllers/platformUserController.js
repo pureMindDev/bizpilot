@@ -13,7 +13,7 @@ export const listPlatformUsers = asyncHandler(async (req, res) => {
   const users = await Staff.find(filter).populate('business', 'name').sort({ createdAt: -1 }).skip(skip).limit(limit);
   const total = await Staff.countDocuments(filter);
 
-  let data = users.map((u) => ({ ...u.toObject(), business: u.business?.name || 'Unknown', businessId: u.business?._id?.toString() || null }));
+  let data = users.map((u) => ({ ...u.toObject(), business: u.business?.name || 'Unknown' }));
   if (search) {
     const q = search.toLowerCase();
     data = data.filter((u) => u.name.toLowerCase().includes(q) || u.business.toLowerCase().includes(q));

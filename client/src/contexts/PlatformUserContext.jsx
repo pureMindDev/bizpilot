@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import api from '../services/api';
+import { adminApi } from '../services/api';
 import { extractErrorMessage } from '../utils/apiError';
-import { withIds, withId } from '../utils/normalize';
+import { withIds } from '../utils/normalize';
 import { useAdminAuth } from './AdminAuthContext';
 
 const PlatformUserContext = createContext();
@@ -14,7 +14,7 @@ export function PlatformUserProvider({ children }) {
 
   const fetchUsers = async () => {
     try {
-      const res = await api.get('/admin/users', { params: { limit: 200 } });
+      const res = await adminApi.get('/admin/users', { params: { limit: 100 } });
       setUsers(withIds(res.data.data));
     } catch (err) {
       toast.error(extractErrorMessage(err));
@@ -35,25 +35,13 @@ export function PlatformUserProvider({ children }) {
   }, [isAdminAuthenticated, authLoading]);
 
   const suspendUser = async (id) => {
-    try {
-      const res = await api.patch(`/admin/users/${id}/suspend`);
-      const updated = withId(res.data.data);
-      setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, ...updated } : u)));
-      return updated;
-    } catch (err) {
-      toast.error(extractErrorMessage(err));
-      throw err;
-    }
+    const res = await adminApi.patch(`/admin/users/${id}/suspend`);
+    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, status: res.data.data.status } : u)));
   };
 
   const deleteUser = async (id) => {
-    try {
-      await api.delete(`/admin/users/${id}`);
-      setUsers((prev) => prev.filter((u) => u.id !== id));
-    } catch (err) {
-      toast.error(extractErrorMessage(err));
-      throw err;
-    }
+    await adminApi.delete(`/admin/users/${id}`);
+    setUsers((prev) => prev.filter((u) => u.id !== id));
   };
 
   return (

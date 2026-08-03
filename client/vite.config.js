@@ -3,15 +3,18 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-  // In dev, /api is proxied to the Express server so the browser stays on a
-  // single origin (no CORS preflights, cookies just work).
   server: {
-    port: 5174,
+    port: 5173,
+    // Fallback for when VITE_API_URL isn't set (services/api.js defaults the
+    // baseURL to '/api') — proxies straight to the local Express server so
+    // `npm run dev` works out of the box alongside `npm run dev` in server/.
     proxy: {
-      '/api': { target: process.env.VITE_PROXY_TARGET || 'http://localhost:5000', changeOrigin: true },
+      "/api": {
+        target: "http://localhost:5000",
+        changeOrigin: true,
+      },
     },
   },
-
   css: {
     preprocessorOptions: {
       scss: { api: "modern-compiler" },

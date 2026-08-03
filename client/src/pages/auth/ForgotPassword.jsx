@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FiAlertCircle, FiCheckCircle, FiArrowLeft } from 'react-icons/fi';
 import AuthLayout from '../../layouts/AuthLayout';
 import Button from '../../components/common/Button';
@@ -12,6 +12,7 @@ export default function ForgotPassword() {
   const [serverError, setServerError] = useState('');
   const [sent, setSent] = useState(false);
   const { forgotPassword } = useAuth();
+  const navigate = useNavigate();
 
   const onSubmit = async (data) => {
     setServerError('');
@@ -27,14 +28,22 @@ export default function ForgotPassword() {
   };
 
   if (sent) {
+    const email = getValues('email');
     return (
       <AuthLayout title="Check your email">
         <div className="badge badge-success" style={{ display: 'flex', padding: '12px 14px', width: '100%', marginBottom: 18 }}>
-          <FiCheckCircle size={15} /> We sent a reset link to {getValues('email')}
+          <FiCheckCircle size={15} /> If an account exists for {email}, we sent it a reset code
         </div>
         <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 22 }}>
           Didn't get the email? Check your spam folder, or try again with a different address.
         </p>
+        <Button
+          variant="primary"
+          onClick={() => navigate('/reset-password', { state: { email } })}
+          style={{ width: '100%', justifyContent: 'center', marginBottom: 10 }}
+        >
+          I have my code
+        </Button>
         <Link to="/login" className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>
           <FiArrowLeft size={15} /> Back to login
         </Link>

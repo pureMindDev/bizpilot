@@ -73,8 +73,8 @@ A stolen business token cannot be used against any `/api/admin/*` route and vice
 |---|---|---|
 | POST | `/api/auth/register` | Create a business + its Owner account |
 | POST | `/api/auth/login` | Staff login |
-| POST | `/api/auth/forgot-password` | Request a reset (mock — no email sent) |
-| POST | `/api/auth/reset-password` | Set a new password |
+| POST | `/api/auth/forgot-password` | Request a reset code (emailed via Brevo, or logged to console if `BREVO_API_KEY` is unset) |
+| POST | `/api/auth/reset-password` | Verify the code and set a new password |
 | GET | `/api/auth/me` | Current staff profile |
 | GET/POST/PATCH/DELETE | `/api/products` | Inventory CRUD |
 | PATCH | `/api/products/:id/stock` | Relative stock adjustment `{ delta }` |
@@ -100,8 +100,9 @@ A stolen business token cannot be used against any `/api/admin/*` route and vice
 | GET/PATCH | `/api/admin/plans` | Subscription plan management |
 | PATCH | `/api/admin/plans/business/:businessId/change` | `{ action: upgrade\|downgrade\|trial\|cancel }` |
 | GET | `/api/admin/payments` | Payment table + revenue summary |
-| PATCH | `/api/admin/payments/:id/refund` | Simulated refund |
+| PATCH | `/api/admin/payments/:id/refund` | Refund — calls the real Paystack refund API when the payment has a `providerReference` and `PAYSTACK_SECRET_KEY` is set, otherwise a DB-only simulated refund |
 | GET | `/api/admin/payments/revenue-growth` | Monthly revenue series |
+| POST | `/api/webhooks/paystack` | Paystack webhook receiver (no admin auth — trust comes from HMAC signature verification). Handles `charge.success`, `charge.failed`, `refund.processed`/`refund.processing` |
 | GET/PATCH/DELETE | `/api/admin/users` | Staff across every business |
 | GET | `/api/admin/tickets` | Support tickets |
 | PATCH | `/api/admin/tickets/:id/assign` \| `/resolve` \| `/close` | Ticket workflow |
@@ -122,15 +123,25 @@ VITE_API_URL=http://localhost:5000/api
 ```
 
 Swapping the mock-data Contexts (`AuthContext`, `ProductContext`, etc.) over to call this API
-instead of `useState(mockData)` is a separate, deliberate follow-up step — this backend is
-ready to be wired in whenever you want to do that.
+instead of `useState(mockData)` has already been done — every context's CRUD flow calls this API.
+The only leftover `mock*.js` imports are static dropdown constants (categories, statuses, roles),
+which is intentional.
 
 ## Notes on scope
 
-- Password reset is a mock flow (no email/SMS delivery is actually sent) — the endpoint exists
-  and behaves correctly, but there's no email provider wired up.
-- MongoDB transactions aren't used for checkout (works fine against a standalone `mongod`;
-  if you deploy against a replica set, wrapping `createSale` in a session/transaction is a
-  reasonable hardening step for perfect atomicity).
-- Refunds, payment provider webhooks (Paystack/Flutterwave/Stripe), and SMTP/SMS sending are
-  simulated/UI-only, matching what the frontend already treats as simulated.
+- Password reset sends a real 6-digit code via Brevo (`POST /api/auth/forgot-password` →
+  `POST /api/auth/reset-password`), mirroring the email-verification flow. If `BREVO_API_KEY`
+  isn't set, the code is logged to the server console instead of emailed, so the flow still
+  works end-to-end in local dev without a Brevo account.
+- Checkout (`completeCheckout` in `services/saleService.js`) runs its core writes — stock
+  validation, sale creation, inventory decrement, customer totals — inside a MongoDB session/
+  transaction for atomicity. Against a standalone `mongod` (which doesn't support transactions),
+  it automatically falls back to running the same steps without a session, logging a warning;
+  deploy against a replica set (e.g. MongoDB Atlas) to get full atomicity in production.
+- Paystack refunds and webhooks are now real: `POST /api/webhooks/paystack` verifies the
+  `x-paystack-signature` HMAC and updates `Payment` status on `charge.success` / `charge.failed` /
+  `refund.processed`; `PATCH /api/admin/payments/:id/refund` calls Paystack's live refund API when
+  a payment has a `providerReference` and `PAYSTACK_SECRET_KEY` is set. Without that key, both fall
+  back to the previous DB-only simulated behavior, so local dev still works with no live account.
+- Flutterwave and Stripe remain listed as payment methods in the data model but have no provider
+  integration — only Paystack does. SMS sending is still simulated/UI-only.

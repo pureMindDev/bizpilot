@@ -89,9 +89,9 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const resetPassword = async ({ email, password }) => {
+  const resetPassword = async ({ email, code, password }) => {
     try {
-      const res = await api.post('/auth/reset-password', { email, password });
+      const res = await api.post('/auth/reset-password', { email, code, password });
       return res.data.message;
     } catch (err) {
       throw new Error(extractErrorMessage(err));

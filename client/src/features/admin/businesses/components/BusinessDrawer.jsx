@@ -1,14 +1,25 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { FiX, FiEdit2, FiTrash2, FiPause, FiPlay, FiMail, FiPhone, FiMapPin, FiUsers, FiBox, FiTrendingUp, FiExternalLink } from 'react-icons/fi';
 import { useBusinesses } from '../../../../contexts/BusinessContext';
 import { formatCurrency, formatDate, timeAgo, initials } from '../../../../utils/format';
+import { extractErrorMessage } from '../../../../utils/apiError';
 import styles from './BusinessDrawer.module.scss';
 
 const STATUS_TONE = { Active: 'success', Trial: 'info', Expired: 'warning', Suspended: 'danger' };
 
 export default function BusinessDrawer({ business, onClose, onEdit, onDelete }) {
   const { suspendBusiness, activateBusiness } = useBusinesses();
+
+  const handleToggleStatus = async () => {
+    try {
+      if (business.status === 'Suspended') { await activateBusiness(business.id); toast.success(`${business.name} activated`); }
+      else { await suspendBusiness(business.id); toast.success(`${business.name} suspended`); }
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -79,11 +90,11 @@ export default function BusinessDrawer({ business, onClose, onEdit, onDelete }) 
             <div className={styles.footer}>
               <button className="btn btn-secondary btn-icon" onClick={() => onEdit(business)}><FiEdit2 size={14} /></button>
               {business.status === 'Suspended' ? (
-                <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => activateBusiness(business.id)}>
+                <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={handleToggleStatus}>
                   <FiPlay size={14} /> Activate
                 </button>
               ) : (
-                <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => suspendBusiness(business.id)}>
+                <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={handleToggleStatus}>
                   <FiPause size={14} /> Suspend
                 </button>
               )}

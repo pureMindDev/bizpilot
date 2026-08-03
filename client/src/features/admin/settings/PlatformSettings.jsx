@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { FiGlobe, FiMail, FiCreditCard, FiShield, FiTool, FiKey, FiImage, FiCopy, FiRefreshCw } from 'react-icons/fi';
 import { usePlatformSettings } from '../../../contexts/PlatformSettingsContext';
 import Switch from '../../../components/common/Switch';
 import Button from '../../../components/common/Button';
+import { extractErrorMessage } from '../../../utils/apiError';
 import styles from '../../settings/Settings.module.scss';
 
 const TABS = [
@@ -51,9 +52,19 @@ export default function PlatformSettings() {
 }
 
 function GeneralTab() {
-  const { settings, updateSettings } = usePlatformSettings();
-  const { register, handleSubmit } = useForm({ defaultValues: settings });
-  const onSubmit = (data) => { updateSettings(data); toast.success('General settings saved'); };
+  const { settings, updateSettings, loading } = usePlatformSettings();
+  const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm({ defaultValues: settings });
+
+  useEffect(() => { if (!loading) reset(settings); }, [loading]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const onSubmit = async (data) => {
+    try {
+      await updateSettings(data);
+      toast.success('General settings saved');
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -104,15 +115,25 @@ function GeneralTab() {
         </select>
       </div>
 
-      <Button type="submit" variant="primary">Save changes</Button>
+      <Button type="submit" variant="primary" loading={isSubmitting}>Save changes</Button>
     </form>
   );
 }
 
 function EmailTab() {
-  const { settings, updateSettings } = usePlatformSettings();
-  const { register, handleSubmit } = useForm({ defaultValues: settings });
-  const onSubmit = (data) => { updateSettings(data); toast.success('Email & SMS settings saved'); };
+  const { settings, updateSettings, loading } = usePlatformSettings();
+  const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm({ defaultValues: settings });
+
+  useEffect(() => { if (!loading) reset(settings); }, [loading]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const onSubmit = async (data) => {
+    try {
+      await updateSettings(data);
+      toast.success('Email & SMS settings saved');
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -143,7 +164,7 @@ function EmailTab() {
         </select>
       </div>
 
-      <Button type="submit" variant="primary">Save changes</Button>
+      <Button type="submit" variant="primary" loading={isSubmitting}>Save changes</Button>
     </form>
   );
 }
@@ -156,6 +177,15 @@ function PaymentsTab() {
     { key: 'stripeEnabled', name: 'Stripe', desc: 'Accept international card payments' },
   ];
 
+  const handleToggle = async (key, name, value) => {
+    try {
+      await updateSettings({ [key]: value });
+      toast.success(`${name} ${value ? 'enabled' : 'disabled'}`);
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    }
+  };
+
   return (
     <div>
       <h3 className={styles.sectionHeading}>Payment providers</h3>
@@ -166,7 +196,7 @@ function PaymentsTab() {
             <p className={styles.toggleTitle}>{p.name}</p>
             <p className={styles.toggleSub}>{p.desc}</p>
           </div>
-          <Switch checked={settings[p.key]} onChange={(v) => { updateSettings({ [p.key]: v }); toast.success(`${p.name} ${v ? 'enabled' : 'disabled'}`); }} />
+          <Switch checked={!!settings[p.key]} onChange={(v) => handleToggle(p.key, p.name, v)} />
         </div>
       ))}
     </div>
@@ -174,11 +204,29 @@ function PaymentsTab() {
 }
 
 function SecurityTab() {
-  const { settings, updateSettings } = usePlatformSettings();
-  const { register, handleSubmit, watch } = useForm({ defaultValues: settings });
+  const { settings, updateSettings, loading } = usePlatformSettings();
+  const { register, handleSubmit, watch, reset, formState: { isSubmitting } } = useForm({ defaultValues: settings });
   const twoFactor = watch('twoFactorEnabled');
   const requireSymbol = watch('passwordRequireSymbol');
-  const onSubmit = (data) => { updateSettings(data); toast.success('Security settings saved'); };
+
+  useEffect(() => { if (!loading) reset(settings); }, [loading]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const onSubmit = async (data) => {
+    try {
+      await updateSettings(data);
+      toast.success('Security settings saved');
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    }
+  };
+
+  const handleToggle = async (key, value) => {
+    try {
+      await updateSettings({ [key]: value });
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -193,7 +241,7 @@ function SecurityTab() {
           <p className={styles.toggleTitle}>Two-factor authentication</p>
           <p className={styles.toggleSub}>Require 2FA for all Super Admin accounts</p>
         </div>
-        <Switch checked={!!twoFactor} onChange={(v) => updateSettings({ twoFactorEnabled: v })} />
+        <Switch checked={!!twoFactor} onChange={(v) => handleToggle('twoFactorEnabled', v)} />
       </div>
 
       <h3 className={styles.sectionHeading} style={{ marginTop: 26 }}>Password policy</h3>
@@ -206,16 +254,25 @@ function SecurityTab() {
           <p className={styles.toggleTitle}>Require symbols</p>
           <p className={styles.toggleSub}>Passwords must include at least one special character</p>
         </div>
-        <Switch checked={!!requireSymbol} onChange={(v) => updateSettings({ passwordRequireSymbol: v })} />
+        <Switch checked={!!requireSymbol} onChange={(v) => handleToggle('passwordRequireSymbol', v)} />
       </div>
 
-      <Button type="submit" variant="primary">Save changes</Button>
+      <Button type="submit" variant="primary" loading={isSubmitting}>Save changes</Button>
     </form>
   );
 }
 
 function SystemTab() {
   const { settings, updateSettings } = usePlatformSettings();
+
+  const handleToggle = async (key, value, successMsg) => {
+    try {
+      await updateSettings({ [key]: value });
+      if (successMsg) toast.success(successMsg);
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    }
+  };
 
   return (
     <div>
@@ -225,7 +282,10 @@ function SystemTab() {
           <p className={styles.toggleTitle}>Enable maintenance mode</p>
           <p className={styles.toggleSub}>Business dashboards will show a maintenance banner and block new logins</p>
         </div>
-        <Switch checked={settings.maintenanceMode} onChange={(v) => { updateSettings({ maintenanceMode: v }); toast.success(v ? 'Maintenance mode enabled' : 'Maintenance mode disabled'); }} />
+        <Switch
+          checked={!!settings.maintenanceMode}
+          onChange={(v) => handleToggle('maintenanceMode', v, v ? 'Maintenance mode enabled' : 'Maintenance mode disabled')}
+        />
       </div>
 
       <h3 className={styles.sectionHeading} style={{ marginTop: 26 }}>Backups</h3>
@@ -234,17 +294,20 @@ function SystemTab() {
           <p className={styles.toggleTitle}>Automatic backups</p>
           <p className={styles.toggleSub}>Automatically back up platform data</p>
         </div>
-        <Switch checked={settings.autoBackup} onChange={(v) => updateSettings({ autoBackup: v })} />
+        <Switch checked={!!settings.autoBackup} onChange={(v) => handleToggle('autoBackup', v)} />
       </div>
       <div className="form-group" style={{ maxWidth: 220, marginTop: 14 }}>
         <label className="form-label">Backup frequency</label>
-        <select className="form-select" value={settings.backupFrequency} onChange={(e) => updateSettings({ backupFrequency: e.target.value })}>
+        <select className="form-select" value={settings.backupFrequency || 'Daily'} onChange={(e) => handleToggle('backupFrequency', e.target.value)}>
           <option value="Hourly">Hourly</option>
           <option value="Daily">Daily</option>
           <option value="Weekly">Weekly</option>
         </select>
       </div>
       <div style={{ marginTop: 16 }}>
+        {/* Simulated, like the Export PDF/Excel buttons elsewhere — there's no
+            real backup-execution infrastructure wired up (would need actual
+            DB backup/storage tooling, which is out of scope here). */}
         <Button variant="secondary" onClick={() => toast.success('Backup started')}>Run backup now</Button>
       </div>
     </div>
@@ -252,6 +315,10 @@ function SystemTab() {
 }
 
 function ApiKeysTab() {
+  // Simulated UI, matching the original spec's "API Keys UI" wording — there's
+  // no real key-generation/rotation backend (that needs proper hashing,
+  // storage, and invalidation infrastructure well beyond wiring existing UI
+  // to real data).
   const keys = [
     { label: 'Live API key', value: 'bzp_live_sk_4f8a2c9e1d0b7f3a6c5e2d1b8f9a0c3e' },
     { label: 'Test API key', value: 'bzp_test_sk_1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d' },

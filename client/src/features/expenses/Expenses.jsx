@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { FiPlus, FiCreditCard, FiEdit2, FiTrash2 } from 'react-icons/fi';
-import { expenseCategories } from '../../data/options';
+import { expenseCategories } from '../../data/mockExpenses';
 import { formatCurrency, formatDate } from '../../utils/format';
 import { extractErrorMessage } from '../../utils/apiError';
 import { withId } from '../../utils/normalize';
@@ -95,7 +95,6 @@ export default function Expenses() {
           ) : filtered.length === 0 ? (
             <EmptyState icon={FiCreditCard} title="No expenses found" message="Try a different category or add a new expense." />
           ) : (
-
             <div className="table-wrap">
               <table>
                 <thead><tr><th>Description</th><th>Category</th><th>Date</th><th>Recorded by</th><th>Amount</th><th></th></tr></thead>

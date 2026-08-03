@@ -1,9 +1,9 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import api from '../services/api';
+import { adminApi } from '../services/api';
 import { extractErrorMessage } from '../utils/apiError';
 import { withIds } from '../utils/normalize';
-import { auditCategories } from '../data/options';
+import { auditCategories } from '../data/mockAuditLogs';
 import { useAdminAuth } from './AdminAuthContext';
 
 const AuditLogContext = createContext();
@@ -15,7 +15,7 @@ export function AuditLogProvider({ children }) {
 
   const fetchLogs = async () => {
     try {
-      const res = await api.get('/admin/audit-logs', { params: { limit: 100 } });
+      const res = await adminApi.get('/admin/audit-logs', { params: { limit: 100 } });
       setLogs(withIds(res.data.data));
     } catch (err) {
       toast.error(extractErrorMessage(err));

@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import api from '../services/api';
 import { extractErrorMessage } from '../utils/apiError';
 import { withId, withIds } from '../utils/normalize';
-import { productCategories, productSuppliers } from '../data/options';
+import { productCategories, productSuppliers } from '../data/mockProducts';
 import { useAuth } from './AuthContext';
 
 const ProductContext = createContext();

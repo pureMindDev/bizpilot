@@ -3,8 +3,9 @@ import toast from 'react-hot-toast';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { FiSearch, FiDownload, FiFileText, FiRotateCcw, FiEye } from 'react-icons/fi';
 import { usePayments } from '../../../contexts/PaymentContext';
-import { formatCurrency, formatDateTime } from '../../../utils/format';
-import { getRevenueGrowth } from '../dashboard/adminDashboardUtils';
+import { adminApi } from '../../../services/api';
+import { formatCurrency, formatDateTime, formatMonthLabel } from '../../../utils/format';
+import { extractErrorMessage } from '../../../utils/apiError';
 import EmptyState from '../../../components/common/EmptyState';
 import TableSkeleton from '../../../components/common/TableSkeleton';
 import Modal from '../../../components/common/Modal';
@@ -14,17 +15,18 @@ import ChartCard from '../../dashboard/components/ChartCard';
 const STATUS_TONE = { Paid: 'success', Pending: 'warning', Failed: 'danger', Refunded: 'neutral' };
 
 export default function Payments() {
-  const { payments, methods, statuses, refundPayment, totalRevenue } = usePayments();
-  const [loading, setLoading] = useState(true);
+  const { payments, methods, statuses, refundPayment, totalRevenue, loading } = usePayments();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('All');
   const [method, setMethod] = useState('All');
   const [viewing, setViewing] = useState(null);
   const [refundTarget, setRefundTarget] = useState(null);
+  const [revenueData, setRevenueData] = useState([]);
 
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 450);
-    return () => clearTimeout(t);
+    adminApi.get('/admin/payments/revenue-growth').then((res) => {
+      setRevenueData(res.data.data.map((r) => ({ ...r, month: formatMonthLabel(r.month) })));
+    });
   }, []);
 
   const filtered = useMemo(() => {
@@ -36,12 +38,14 @@ export default function Payments() {
     });
   }, [payments, search, status, method]);
 
-  const revenueData = useMemo(() => getRevenueGrowth(payments), [payments]);
-
-  const confirmRefund = () => {
-    refundPayment(refundTarget.id);
-    toast.success(`Refund processed for ${refundTarget.invoiceNo}`);
-    setRefundTarget(null);
+  const confirmRefund = async () => {
+    try {
+      await refundPayment(refundTarget.id);
+      toast.success(`Refund processed for ${refundTarget.invoiceNo}`);
+      setRefundTarget(null);
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    }
   };
 
   const simulateExport = (format) => toast.success(`Payment report exported as ${format}`);
