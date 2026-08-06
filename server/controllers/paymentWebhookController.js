@@ -2,6 +2,7 @@ import Payment from '../models/Payment.js';
 import AuditLog from '../models/AuditLog.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { verifyWebhookSignature } from '../services/paystackService.js';
+import { activatePaidPayment } from '../services/subscriptionService.js';
 
 /**
  * POST /api/webhooks/paystack — receives real payment/refund events from Paystack.
@@ -26,20 +27,9 @@ export const handlePaystackWebhook = asyncHandler(async (req, res) => {
   switch (event) {
     case 'charge.success': {
       if (reference) {
-        const payment = await Payment.findOneAndUpdate(
-          { providerReference: reference },
-          { status: 'Paid', method: 'Paystack' },
-          { new: true }
-        );
+        const payment = await Payment.findOne({ providerReference: reference });
         if (payment) {
-          await AuditLog.create({
-            action: `Payment ${payment.invoiceNo} confirmed via Paystack webhook`,
-            category: 'Payment Events',
-            user: 'Paystack Webhook',
-            business: payment.business,
-            ip: req.ip,
-            device: 'Paystack',
-          });
+          await activatePaidPayment(payment, { source: 'webhook' });
         }
       }
       break;

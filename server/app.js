@@ -19,6 +19,7 @@ import staffRoutes from './routes/staffRoutes.js';
 import expenseRoutes from './routes/expenseRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import businessSettingsRoutes from './routes/businessSettingsRoutes.js';
+import subscriptionRoutes from './routes/subscriptionRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 
 // Admin-side routes
@@ -76,6 +77,7 @@ app.use('/api/staff', staffRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/business', businessSettingsRoutes);
+app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
 // Admin-side API

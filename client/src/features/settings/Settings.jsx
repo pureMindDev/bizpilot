@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { FiUser, FiCreditCard, FiBell, FiShield, FiImage, FiAlertTriangle } from 'react-icons/fi';
+import { FiUser, FiCreditCard, FiPackage, FiBell, FiShield, FiImage, FiAlertTriangle } from 'react-icons/fi';
 import { useSettings } from '../../contexts/SettingsContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -9,18 +10,24 @@ import PasswordInput from '../../components/common/PasswordInput';
 import Switch from '../../components/common/Switch';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
+import PlanTab from './components/PlanTab';
 import { extractErrorMessage } from '../../utils/apiError';
 import styles from './Settings.module.scss';
 
 const TABS = [
   { id: 'business', label: 'Business', icon: FiUser },
+  { id: 'plan', label: 'Plan & Billing', icon: FiPackage },
   { id: 'billing', label: 'Currency & Tax', icon: FiCreditCard },
   { id: 'notifications', label: 'Notifications', icon: FiBell },
   { id: 'security', label: 'Security', icon: FiShield },
 ];
 
+const TAB_IDS = TABS.map((t) => t.id);
+
 export default function Settings() {
-  const [activeTab, setActiveTab] = useState('business');
+  const [searchParams] = useSearchParams();
+  const requestedTab = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(TAB_IDS.includes(requestedTab) ? requestedTab : 'business');
 
   return (
     <div className="page-container">
@@ -42,6 +49,7 @@ export default function Settings() {
 
         <div className="card" style={{ padding: 26, flex: 1 }}>
           {activeTab === 'business' && <BusinessTab />}
+          {activeTab === 'plan' && <PlanTab />}
           {activeTab === 'billing' && <BillingTab />}
           {activeTab === 'notifications' && <NotificationsTab />}
           {activeTab === 'security' && <SecurityTab />}

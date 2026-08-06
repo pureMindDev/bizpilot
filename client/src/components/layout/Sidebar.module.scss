@@ -121,7 +121,11 @@
 .upsellTitle { color: #fff; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
 .upsellText { color: v.$slate-400; font-size: 12px; line-height: 1.5; margin-bottom: 10px; }
 .upsellBtn {
+  display: block;
   width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  text-decoration: none;
   background: v.$primary;
   color: #fff;
   border: none;

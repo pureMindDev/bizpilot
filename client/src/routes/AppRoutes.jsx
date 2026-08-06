@@ -10,6 +10,7 @@ import ForgotPassword from '../pages/auth/ForgotPassword';
 import ResetPassword from '../pages/auth/ResetPassword';
 import VerifyEmail from '../pages/auth/VerifyEmail';
 import AdminLogin from '../pages/admin/AdminLogin';
+import Landing from '../pages/marketing/Landing';
 
 import Dashboard from '../features/dashboard/Dashboard';
 import Inventory from '../features/inventory/Inventory';
@@ -20,6 +21,7 @@ import Reports from '../features/reports/Reports';
 import Expenses from '../features/expenses/Expenses';
 import Settings from '../features/settings/Settings';
 import Notifications from '../features/notifications/Notifications';
+import BillingCallback from '../pages/billing/BillingCallback';
 
 import AdminDashboard from '../features/admin/dashboard/AdminDashboard';
 import Businesses from '../features/admin/businesses/Businesses';
@@ -60,6 +62,7 @@ export default function AppRoutes() {
         <Route path="/reports" element={<Reports />} />
         <Route path="/expenses" element={<Expenses />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/settings/billing/callback" element={<BillingCallback />} />
         <Route path="/notifications" element={<Notifications />} />
       </Route>
 
@@ -88,8 +91,8 @@ export default function AppRoutes() {
         <Route path="/admin/settings" element={<PlatformSettings />} />
       </Route>
 
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/" element={<Landing />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

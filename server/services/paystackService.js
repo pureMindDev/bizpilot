@@ -45,4 +45,51 @@ export const requestPaystackRefund = async (reference, amountKobo) => {
   return data;
 };
 
-export default { isPaystackConfigured, verifyWebhookSignature, requestPaystackRefund };
+/**
+ * Starts a real Paystack transaction and returns the checkout URL to redirect
+ * the business owner to. Called from subscriptionController.js when a
+ * business picks a plan.
+ */
+export const initializeTransaction = async ({ email, amountKobo, reference, callbackUrl, metadata }) => {
+  const res = await fetch(`${PAYSTACK_API}/transaction/initialize`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${env.paystack.secretKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email, amount: amountKobo, reference, callback_url: callbackUrl, metadata }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.status === false) {
+    throw new Error(data?.message || `Paystack transaction initialize failed (${res.status})`);
+  }
+  return data.data; // { authorization_url, access_code, reference }
+};
+
+/**
+ * Confirms a transaction's real status directly with Paystack — used right
+ * after the business owner is redirected back from checkout, so the UI can
+ * show a result immediately instead of waiting on the webhook to arrive.
+ * The webhook (paymentWebhookController.js) remains the durable source of
+ * truth in case the owner closes the tab before this ever runs.
+ */
+export const verifyTransaction = async (reference) => {
+  const res = await fetch(`${PAYSTACK_API}/transaction/verify/${encodeURIComponent(reference)}`, {
+    headers: { Authorization: `Bearer ${env.paystack.secretKey}` },
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.status === false) {
+    throw new Error(data?.message || `Paystack transaction verify failed (${res.status})`);
+  }
+  return data.data; // { status: 'success'|'failed'|..., reference, amount, ... }
+};
+
+export default {
+  isPaystackConfigured,
+  verifyWebhookSignature,
+  requestPaystackRefund,
+  initializeTransaction,
+  verifyTransaction,
+};

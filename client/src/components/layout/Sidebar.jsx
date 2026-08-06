@@ -1,9 +1,10 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiGrid, FiBox, FiShoppingCart, FiUsers, FiUserCheck,
   FiBarChart2, FiCreditCard, FiSettings, FiX, FiZap,
 } from 'react-icons/fi';
+import { useSettings } from '../../contexts/SettingsContext';
 import styles from './Sidebar.module.scss';
 
 const NAV_ITEMS = [
@@ -16,6 +17,14 @@ const NAV_ITEMS = [
   { to: '/expenses', icon: FiCreditCard, label: 'Expenses' },
   { to: '/settings', icon: FiSettings, label: 'Settings' },
 ];
+
+// What each plan unlocks over the one before it — used to make the sidebar
+// upsell say something true about the specific next step up, instead of a
+// generic "Pro" pitch for a plan that doesn't exist in the real plan model.
+const NEXT_PLAN = {
+  Starter: { name: 'Growth', pitch: 'Upgrade to Growth for up to 3 branches and staff roles.' },
+  Growth: { name: 'Enterprise', pitch: 'Upgrade to Enterprise for unlimited branches and API access.' },
+};
 
 export default function Sidebar({ mobileOpen, onCloseMobile }) {
   return (
@@ -78,12 +87,24 @@ function SidebarContent({ onCloseMobile, showClose }) {
       </nav>
 
       <div className={styles.footer}>
-        <div className={styles.upsell}>
-          <p className={styles.upsellTitle}>Growing fast?</p>
-          <p className={styles.upsellText}>Upgrade to BizPilot Pro for multi-branch support.</p>
-          <button className={styles.upsellBtn}>Upgrade plan</button>
-        </div>
+        <UpsellCard onCloseMobile={onCloseMobile} />
       </div>
     </>
+  );
+}
+
+function UpsellCard({ onCloseMobile }) {
+  const { settings } = useSettings();
+  const next = NEXT_PLAN[settings.plan];
+  if (!next) return null; // already on Enterprise — nothing to upsell
+
+  return (
+    <div className={styles.upsell}>
+      <p className={styles.upsellTitle}>Growing fast?</p>
+      <p className={styles.upsellText}>{next.pitch}</p>
+      <Link to="/settings?tab=plan" onClick={onCloseMobile} className={styles.upsellBtn}>
+        Upgrade plan
+      </Link>
+    </div>
   );
 }

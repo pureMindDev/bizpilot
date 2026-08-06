@@ -1,0 +1,21 @@
+@use '../../styles/variables' as v;
+
+.wrap {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.card {
+  text-align: center;
+  max-width: 380px;
+
+  h1 { font-size: 19px; font-weight: 700; color: var(--text-primary); margin: 16px 0 6px; }
+  p { font-size: 13.5px; color: var(--text-secondary); }
+}
+
+.icon { color: var(--text-tertiary); }
+.success { color: v.$success; }
+.failed { color: v.$danger; }

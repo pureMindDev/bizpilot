@@ -25,6 +25,11 @@ const fromBusinessDoc = (doc) => ({
   notifyNewSale: doc.notificationPreferences?.newSale ?? true,
   notifyStaffLogin: doc.notificationPreferences?.staffLogin ?? false,
   notifyPayment: doc.notificationPreferences?.payment ?? true,
+  // Read-only — set only by a successful checkout (see subscriptionController.js
+  // server-side), never editable directly via PATCH /api/business.
+  plan: doc.plan,
+  subscriptionStatus: doc.status,
+  renewalDate: doc.renewalDate,
 });
 
 const toBusinessPayload = (flatUpdates) => {
