@@ -3,8 +3,27 @@
 // Same shared heading treatment as Settings.module.scss (CSS Modules are
 // scoped per-file, so this is a small deliberate duplication rather than a
 // cross-file import).
-.sectionHeading { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
-.sectionSub { font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; }
+.sectionHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.sectionIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: v.$radius-sm;
+  background: v.$primary-50;
+  color: v.$primary;
+  flex-shrink: 0;
+}
+
+.sectionHeading { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
+.sectionSub { font-size: 13px; color: var(--text-secondary); }
 
 .ownerNotice {
   font-size: 12.5px;
@@ -18,10 +37,8 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
   gap: 16px;
-
-  @media (max-width: 760px) { grid-template-columns: 1fr; }
 }
 
 .card {
@@ -37,6 +54,15 @@
 .cardCurrent {
   border-color: v.$primary;
   box-shadow: 0 0 0 1px v.$primary;
+}
+
+.cardSuggested {
+  border-color: v.$warning;
+  box-shadow: 0 0 0 1px v.$warning;
+}
+
+.badgeSuggested {
+  background: v.$warning;
 }
 
 .badge {

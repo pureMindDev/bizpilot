@@ -18,7 +18,6 @@ business dashboard (`/api/...`) and the Super Admin console (`/api/admin/...`) w
 ```bash
 cd server
 npm install
-cp .env.example .env      # then edit MONGODB_URI etc. if needed
 npm run seed               # populates realistic demo data (20 businesses, staff, products, sales, admins, plans...)
 npm run dev                 # starts the API on http://localhost:5000 with nodemon
 ```

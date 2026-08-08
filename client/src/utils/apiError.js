@@ -12,4 +12,14 @@ export const extractErrorMessage = (err) => {
   return data.message || 'Something went wrong. Please try again.';
 };
 
+// A plan-limit error (code PLAN_LIMIT_REACHED) carries structured details —
+// { resource, limit, current, plan, upgradeTo } — instead of a plain message,
+// so the UI can show an upgrade prompt instead of a generic error toast.
+// Returns null for any other kind of error.
+export const getPlanLimitDetails = (err) => {
+  const data = err?.response?.data;
+  if (data?.code !== 'PLAN_LIMIT_REACHED') return null;
+  return { message: data.message, ...data.details };
+};
+
 export default extractErrorMessage;

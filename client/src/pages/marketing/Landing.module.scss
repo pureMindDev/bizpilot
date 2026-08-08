@@ -515,11 +515,12 @@ $mono: #{v.$font-mono};
 .pricingGrid {
   @include container;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 22px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
   align-items: start;
 
-  @media (max-width: 860px) { grid-template-columns: 1fr; max-width: 420px; }
+  @media (max-width: 1040px) { grid-template-columns: repeat(2, 1fr); max-width: 640px; }
+  @media (max-width: 560px) { grid-template-columns: 1fr; max-width: 420px; }
 }
 
 .priceCard {

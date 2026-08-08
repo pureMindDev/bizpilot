@@ -15,16 +15,35 @@ import { activatePaidPayment } from '../services/subscriptionService.js';
 // up server-side from the Plan collection — never trust a client-supplied
 // amount for something that charges real money.
 export const startCheckout = asyncHandler(async (req, res) => {
-  if (!isPaystackConfigured()) {
-    throw ApiError.badRequest('Payments are not configured yet. Set PAYSTACK_SECRET_KEY on the server to enable plan upgrades.');
-  }
-
   const { plan: planName } = req.body;
   const plan = await Plan.findOne({ name: planName });
   if (!plan) throw ApiError.badRequest('Unknown plan');
 
   const business = await Business.findById(req.businessId);
   if (!business) throw ApiError.notFound('Business not found');
+
+  // A zero-price plan (Free) needs no payment provider at all — switch it
+  // immediately instead of sending the owner through a checkout for ₦0.
+  if (plan.price === 0) {
+    business.plan = plan.name;
+    business.status = 'Active';
+    await business.save();
+
+    await AuditLog.create({
+      action: `Switched to ${plan.name} plan`,
+      category: 'Subscription Changes',
+      user: req.staff.name,
+      business: business._id,
+      ip: req.ip,
+      device: req.headers['user-agent'] || 'Unknown',
+    });
+
+    return res.json({ success: true, data: { immediate: true, business } });
+  }
+
+  if (!isPaystackConfigured()) {
+    throw ApiError.badRequest('Payments are not configured yet. Set PAYSTACK_SECRET_KEY on the server to enable plan upgrades.');
+  }
 
   const reference = `biz_${business._id}_${crypto.randomBytes(6).toString('hex')}`;
   const invoiceNo = `INV-${Date.now().toString(36).toUpperCase()}`;

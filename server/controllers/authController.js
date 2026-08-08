@@ -56,8 +56,8 @@ export const register = asyncHandler(async (req, res) => {
     owner: name,
     email,
     phone: req.body.phone || '',
-    status: 'Trial',
-    plan: 'Starter',
+    status: 'Active',
+    plan: 'Free',
   });
 
   const passwordHash = await Staff.hashPassword(password);

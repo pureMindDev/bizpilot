@@ -1,5 +1,16 @@
 export const mockPlans = [
   {
+    id: 'PLAN-FREE',
+    name: 'Free',
+    price: 0,
+    interval: 'month',
+    userLimit: 1,
+    productLimit: 20,
+    storageLimit: '100 MB',
+    features: ['Single user', 'Basic POS & inventory', 'Community support'],
+    color: '#94A3B8',
+  },
+  {
     id: 'PLAN-STARTER',
     name: 'Starter',
     price: 5000,

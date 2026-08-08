@@ -14,7 +14,7 @@ const businessSchema = new mongoose.Schema(
     city: { type: String, default: '' },
     address: { type: String, default: '' },
     logo: { type: String, default: null },
-    plan: { type: String, enum: ['Starter', 'Growth', 'Enterprise'], default: 'Starter' },
+    plan: { type: String, enum: ['Free', 'Starter', 'Growth', 'Enterprise'], default: 'Free' },
     status: { type: String, enum: ['Active', 'Trial', 'Expired', 'Suspended'], default: 'Trial' },
     currency: { type: String, default: 'NGN' },
     language: { type: String, default: 'English' },

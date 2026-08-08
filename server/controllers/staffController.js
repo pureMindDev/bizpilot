@@ -1,6 +1,7 @@
 import Staff from '../models/Staff.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
+import { assertWithinPlanLimit } from '../services/planLimitService.js';
 
 export const listStaff = asyncHandler(async (req, res) => {
   const staff = await Staff.find({ business: req.businessId }).sort({ createdAt: -1 });
@@ -18,6 +19,8 @@ export const createStaff = asyncHandler(async (req, res) => {
   const { name, email, phone, role, password } = req.body;
   const existing = await Staff.findOne({ business: req.businessId, email: email.toLowerCase() });
   if (existing) throw ApiError.conflict('A staff member with this email already exists');
+
+  await assertWithinPlanLimit(req.businessId, 'staff');
 
   const passwordHash = await Staff.hashPassword(password || 'bizpilot123');
   const staff = await Staff.create({

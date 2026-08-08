@@ -3,13 +3,15 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import Modal from '../../../components/common/Modal';
 import Button from '../../../components/common/Button';
+import PlanLimitModal from '../../../components/common/PlanLimitModal';
 import { useStaff } from '../../../contexts/StaffContext';
-import { extractErrorMessage } from '../../../utils/apiError';
+import { extractErrorMessage, getPlanLimitDetails } from '../../../utils/apiError';
 
 export default function StaffModal({ open, onClose, staffMember }) {
   const { addStaff, updateStaff, roles, rolePermissions } = useStaff();
   const { register, handleSubmit, reset, watch, formState: { errors } } = useForm();
   const [saving, setSaving] = useState(false);
+  const [limitDetails, setLimitDetails] = useState(null);
   const isEdit = !!staffMember;
   const selectedRole = watch('role');
 
@@ -29,13 +31,20 @@ export default function StaffModal({ open, onClose, staffMember }) {
       }
       onClose();
     } catch (err) {
-      toast.error(extractErrorMessage(err));
+      const limit = getPlanLimitDetails(err);
+      if (limit) {
+        onClose();
+        setLimitDetails(limit);
+      } else {
+        toast.error(extractErrorMessage(err));
+      }
     } finally {
       setSaving(false);
     }
   };
 
   return (
+    <>
     <Modal open={open} onClose={onClose} title={isEdit ? 'Edit staff member' : 'Add staff member'} width={480}
       footer={<>
         <Button variant="secondary" onClick={onClose}>Cancel</Button>
@@ -77,5 +86,7 @@ export default function StaffModal({ open, onClose, staffMember }) {
         )}
       </form>
     </Modal>
+    <PlanLimitModal details={limitDetails} onClose={() => setLimitDetails(null)} />
+    </>
   );
 }

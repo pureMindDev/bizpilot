@@ -2,6 +2,7 @@ import Product from '../models/Product.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { paginate, buildMeta } from '../utils/paginate.js';
+import { assertWithinPlanLimit } from '../services/planLimitService.js';
 
 // GET /api/products
 export const listProducts = asyncHandler(async (req, res) => {
@@ -30,6 +31,7 @@ export const getProduct = asyncHandler(async (req, res) => {
 
 // POST /api/products
 export const createProduct = asyncHandler(async (req, res) => {
+  await assertWithinPlanLimit(req.businessId, 'products');
   const product = await Product.create({ ...req.body, business: req.businessId });
   res.status(201).json({ success: true, data: product });
 });

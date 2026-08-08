@@ -22,6 +22,7 @@ const NAV_ITEMS = [
 // upsell say something true about the specific next step up, instead of a
 // generic "Pro" pitch for a plan that doesn't exist in the real plan model.
 const NEXT_PLAN = {
+  Free: { name: 'Starter', pitch: 'Upgrade to Starter for more products and basic reports.' },
   Starter: { name: 'Growth', pitch: 'Upgrade to Growth for up to 3 branches and staff roles.' },
   Growth: { name: 'Enterprise', pitch: 'Upgrade to Enterprise for unlimited branches and API access.' },
 };
@@ -102,7 +103,7 @@ function UpsellCard({ onCloseMobile }) {
     <div className={styles.upsell}>
       <p className={styles.upsellTitle}>Growing fast?</p>
       <p className={styles.upsellText}>{next.pitch}</p>
-      <Link to="/settings?tab=plan" onClick={onCloseMobile} className={styles.upsellBtn}>
+      <Link to={`/settings?tab=plan&suggest=${encodeURIComponent(next.name)}`} onClick={onCloseMobile} className={styles.upsellBtn}>
         Upgrade plan
       </Link>
     </div>

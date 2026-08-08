@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { FiUser, FiCreditCard, FiPackage, FiBell, FiShield, FiImage, FiAlertTriangle } from 'react-icons/fi';
+import { FiUser, FiCreditCard, FiPackage, FiBell, FiShield, FiImage, FiAlertTriangle, FiShoppingCart, FiUserCheck, FiMoon, FiLock, FiTrash2 } from 'react-icons/fi';
 import { useSettings } from '../../contexts/SettingsContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -42,18 +42,31 @@ export default function Settings() {
         <div className={styles.tabList}>
           {TABS.map((t) => (
             <button key={t.id} className={`${styles.tabItem} ${activeTab === t.id ? styles.active : ''}`} onClick={() => setActiveTab(t.id)}>
-              <t.icon size={16} /> {t.label}
+              <span className={styles.tabIcon}><t.icon size={14} /></span>
+              {t.label}
             </button>
           ))}
         </div>
 
-        <div className="card" style={{ padding: 26, flex: 1 }}>
+        <div className={styles.panel}>
           {activeTab === 'business' && <BusinessTab />}
           {activeTab === 'plan' && <PlanTab />}
           {activeTab === 'billing' && <BillingTab />}
           {activeTab === 'notifications' && <NotificationsTab />}
           {activeTab === 'security' && <SecurityTab />}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function SectionHead({ icon: Icon, title, subtitle }) {
+  return (
+    <div className={styles.sectionHead}>
+      <span className={styles.sectionIcon}><Icon size={17} /></span>
+      <div>
+        <h3 className={styles.sectionHeading}>{title}</h3>
+        <p className={styles.sectionSub}>{subtitle}</p>
       </div>
     </div>
   );
@@ -80,8 +93,7 @@ function BusinessTab() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <h3 className={styles.sectionHeading}>Business information</h3>
-      <p className={styles.sectionSub}>This appears on receipts and reports.</p>
+      <SectionHead icon={FiUser} title="Business information" subtitle="This appears on receipts and reports." />
 
       <div className="form-group">
         <label className="form-label">Business logo</label>
@@ -137,8 +149,7 @@ function BillingTab() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <h3 className={styles.sectionHeading}>Currency & language</h3>
-      <p className={styles.sectionSub}>Set how prices and dates appear across your dashboard.</p>
+      <SectionHead icon={FiCreditCard} title="Currency & language" subtitle="Set how prices and dates appear across your dashboard." />
       <div className="form-row-2">
         <div className="form-group">
           <label className="form-label">Currency</label>
@@ -159,9 +170,11 @@ function BillingTab() {
         </div>
       </div>
 
-      <h3 className={styles.sectionHeading} style={{ marginTop: 26 }}>Tax settings</h3>
+      <div className={styles.divider} />
+
+      <h4 className={styles.subHeading}>Tax settings</h4>
       <div className={styles.toggleRow}>
-        <div>
+        <div className={styles.toggleBody}>
           <p className={styles.toggleTitle}>Enable tax on sales</p>
           <p className={styles.toggleSub}>Automatically apply tax during checkout</p>
         </div>
@@ -181,10 +194,10 @@ function BillingTab() {
 function NotificationsTab() {
   const { settings, updateSettings } = useSettings();
   const items = [
-    { key: 'notifyLowStock', title: 'Low stock alerts', sub: 'Get notified when a product falls below its reorder level' },
-    { key: 'notifyNewSale', title: 'New sale notifications', sub: 'Get notified whenever a new sale is recorded' },
-    { key: 'notifyStaffLogin', title: 'Staff login alerts', sub: 'Get notified when a staff member logs in' },
-    { key: 'notifyPayment', title: 'Payment received', sub: 'Get notified when a payment is received' },
+    { key: 'notifyLowStock', icon: FiAlertTriangle, title: 'Low stock alerts', sub: 'Get notified when a product falls below its reorder level' },
+    { key: 'notifyNewSale', icon: FiShoppingCart, title: 'New sale notifications', sub: 'Get notified whenever a new sale is recorded' },
+    { key: 'notifyStaffLogin', icon: FiUserCheck, title: 'Staff login alerts', sub: 'Get notified when a staff member logs in' },
+    { key: 'notifyPayment', icon: FiCreditCard, title: 'Payment received', sub: 'Get notified when a payment is received' },
   ];
 
   const handleToggle = async (key, value) => {
@@ -198,11 +211,11 @@ function NotificationsTab() {
 
   return (
     <div>
-      <h3 className={styles.sectionHeading}>Notification preferences</h3>
-      <p className={styles.sectionSub}>Choose what you want to be notified about.</p>
+      <SectionHead icon={FiBell} title="Notification preferences" subtitle="Choose what you want to be notified about." />
       {items.map((item) => (
         <div key={item.key} className={styles.toggleRow}>
-          <div>
+          <span className={styles.toggleIcon}><item.icon size={15} /></span>
+          <div className={styles.toggleBody}>
             <p className={styles.toggleTitle}>{item.title}</p>
             <p className={styles.toggleSub}>{item.sub}</p>
           </div>
@@ -246,16 +259,20 @@ function SecurityTab() {
 
   return (
     <div>
-      <h3 className={styles.sectionHeading}>Appearance</h3>
+      <SectionHead icon={FiShield} title="Security" subtitle="Manage your appearance, password, and account." />
+
       <div className={styles.toggleRow}>
-        <div>
+        <span className={styles.toggleIcon}><FiMoon size={15} /></span>
+        <div className={styles.toggleBody}>
           <p className={styles.toggleTitle}>Dark mode</p>
           <p className={styles.toggleSub}>Switch between light and dark themes</p>
         </div>
         <Switch checked={theme === 'dark'} onChange={(v) => setTheme(v ? 'dark' : 'light')} />
       </div>
 
-      <h3 className={styles.sectionHeading} style={{ marginTop: 26 }}>Change password</h3>
+      <div className={styles.divider} />
+
+      <h4 className={styles.subHeading}><FiLock size={13} style={{ marginRight: 7, verticalAlign: -1 }} />Change password</h4>
       <form onSubmit={handleSubmit(onSubmit)} style={{ maxWidth: 380 }}>
         <div className="form-group">
           <label className="form-label">Current password</label>
@@ -268,13 +285,20 @@ function SecurityTab() {
         <Button type="submit" variant="primary" loading={isSubmitting}>Update password</Button>
       </form>
 
-      <h3 className={styles.sectionHeading} style={{ marginTop: 30, color: '#EF4444' }}>Danger zone</h3>
-      <div className={styles.dangerBox}>
-        <div>
-          <p className={styles.toggleTitle}>Delete account</p>
-          <p className={styles.toggleSub}>Permanently delete your account and all associated data.</p>
+      <div className={styles.divider} />
+
+      <h4 className={styles.subHeading} style={{ color: '#EF4444' }}>Danger zone</h4>
+      <div className={styles.dangerZone}>
+        <div className={styles.dangerBox}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <span className={styles.dangerIcon}><FiTrash2 size={15} /></span>
+            <div>
+              <p className={styles.toggleTitle}>Delete account</p>
+              <p className={styles.toggleSub}>Permanently delete your account and all associated data.</p>
+            </div>
+          </div>
+          <Button variant="danger" onClick={() => setDeleteOpen(true)}>Delete account</Button>
         </div>
-        <Button variant="danger" onClick={() => setDeleteOpen(true)}>Delete account</Button>
       </div>
 
       <Modal open={deleteOpen} onClose={() => setDeleteOpen(false)} title="Delete your account?" width={440}

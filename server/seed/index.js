@@ -35,6 +35,7 @@ const destroy = async () => {
 
 const seedPlans = async () => {
   const plans = [
+    { name: 'Free', price: 0, userLimit: 1, productLimit: 20, storageLimit: '100 MB', color: '#94A3B8', features: ['Single user', 'Basic POS & inventory', 'Community support'] },
     { name: 'Starter', price: 5000, userLimit: 2, productLimit: 200, storageLimit: '1 GB', color: '#64748B', features: ['Single branch', 'Basic reports', 'Email support', 'POS & inventory'] },
     { name: 'Growth', price: 15000, userLimit: 8, productLimit: 2000, storageLimit: '10 GB', color: '#2563EB', features: ['Up to 3 branches', 'Advanced reports', 'Priority support', 'Staff roles & permissions', 'Customer CRM'] },
     { name: 'Enterprise', price: 45000, userLimit: 50, productLimit: 50000, storageLimit: '100 GB', color: '#7C3AED', features: ['Unlimited branches', 'Custom reports', 'Dedicated support', 'API access', 'White-label option'] },

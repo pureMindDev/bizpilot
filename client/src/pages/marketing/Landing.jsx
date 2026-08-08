@@ -204,7 +204,7 @@ export default function Landing() {
                 <span className={styles.priceCurrency}>₦</span>{plan.price.toLocaleString()}
                 <span className={styles.priceInterval}>/{plan.interval}</span>
               </div>
-              <p className={styles.priceLimits}>Up to {plan.userLimit} users · {plan.productLimit.toLocaleString()} products</p>
+              <p className={styles.priceLimits}>Up to {plan.userLimit} user{plan.userLimit === 1 ? '' : 's'} · {plan.productLimit.toLocaleString()} products</p>
               <ul className={styles.priceFeatures}>
                 {plan.features.map((feat) => (
                   <li key={feat}><FiCheck size={14} /> {feat}</li>

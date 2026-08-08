@@ -1,83 +1,106 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { FiCheck, FiExternalLink } from 'react-icons/fi';
+import { useSearchParams } from 'react-router-dom';
+import { FiCheck, FiMessageCircle, FiPackage } from 'react-icons/fi';
 import api from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useSettings } from '../../../contexts/SettingsContext';
 import { extractErrorMessage } from '../../../utils/apiError';
+import { getUpgradeWhatsAppLink } from '../../../utils/whatsapp';
 import { mockPlans } from '../../../data/mockPlans';
 import styles from './PlanTab.module.scss';
 
 export default function PlanTab() {
   const { user } = useAuth();
-  const { settings } = useSettings();
-  const [checkingOut, setCheckingOut] = useState(null); // plan name currently starting checkout, or null
+  const { settings, refetch } = useSettings();
+  const [searchParams] = useSearchParams();
+  const suggestedPlan = searchParams.get('suggest');
+  const [switching, setSwitching] = useState(false);
   const isOwner = user?.role === 'Owner';
 
-  const currentPlan = settings.plan || 'Starter';
+  const currentPlan = settings.plan || 'Free';
   const renewalDate = settings.renewalDate ? new Date(settings.renewalDate).toLocaleDateString('en-NG', { day: 'numeric', month: 'long', year: 'numeric' }) : null;
 
-  const handleChoose = async (planName) => {
-    if (planName === currentPlan) return;
-    setCheckingOut(planName);
+  // Only the Free plan switches itself, instantly, with no payment involved.
+  // Every paid plan is handled manually over WhatsApp (see handleUpgradeClick).
+  const switchToFree = async () => {
+    setSwitching(true);
     try {
-      const res = await api.post('/subscription/checkout', { plan: planName });
-      // Full redirect, not a fetch — Paystack's checkout page is a real hosted
-      // page the owner needs to land on and enter card details into.
-      window.location.href = res.data.data.authorizationUrl;
+      await api.post('/subscription/checkout', { plan: 'Free' });
+      await refetch();
+      toast.success("You're now on the Free plan.");
     } catch (err) {
       toast.error(extractErrorMessage(err));
-      setCheckingOut(null);
+    } finally {
+      setSwitching(false);
     }
   };
 
   return (
     <div>
-      <h3 className={styles.sectionHeading}>Plan & billing</h3>
-      <p className={styles.sectionSub}>
-        You're on the <strong>{currentPlan}</strong> plan
-        {settings.subscriptionStatus ? ` — ${settings.subscriptionStatus}` : ''}
-        {renewalDate ? `. Renews ${renewalDate}.` : '.'}
-      </p>
+      <div className={styles.sectionHead}>
+        <span className={styles.sectionIcon}><FiPackage size={17} /></span>
+        <div>
+          <h3 className={styles.sectionHeading}>Plan & billing</h3>
+          <p className={styles.sectionSub}>
+            You're on the <strong>{currentPlan}</strong> plan
+            {settings.subscriptionStatus ? ` — ${settings.subscriptionStatus}` : ''}
+            {renewalDate ? `. Renews ${renewalDate}.` : '.'}
+          </p>
+        </div>
+      </div>
 
       {!isOwner && (
-        <div className={styles.ownerNotice}>Only the business owner can change the plan or make payments.</div>
+        <div className={styles.ownerNotice}>Only the business owner can change the plan.</div>
       )}
 
       <div className={styles.grid}>
         {mockPlans.map((plan) => {
           const isCurrent = plan.name === currentPlan;
+          const isSuggested = !isCurrent && plan.name === suggestedPlan;
+          const isFree = plan.price === 0;
           return (
-            <div key={plan.id} className={`${styles.card} ${isCurrent ? styles.cardCurrent : ''}`}>
+            <div key={plan.id} className={`${styles.card} ${isCurrent ? styles.cardCurrent : ''} ${isSuggested ? styles.cardSuggested : ''}`}>
               {isCurrent && <span className={styles.badge}>Current plan</span>}
+              {isSuggested && <span className={`${styles.badge} ${styles.badgeSuggested}`}>Suggested upgrade</span>}
               <h4>{plan.name}</h4>
               <div className={styles.price}>
                 <span className={styles.currency}>₦</span>{plan.price.toLocaleString()}
                 <span className={styles.interval}>/{plan.interval}</span>
               </div>
-              <p className={styles.limits}>Up to {plan.userLimit} users · {plan.productLimit.toLocaleString()} products</p>
+              <p className={styles.limits}>Up to {plan.userLimit} user{plan.userLimit === 1 ? '' : 's'} · {plan.productLimit.toLocaleString()} products</p>
               <ul>
                 {plan.features.map((f) => (
                   <li key={f}><FiCheck size={13} /> {f}</li>
                 ))}
               </ul>
-              <button
-                className="btn btn-secondary"
-                style={{ width: '100%', justifyContent: 'center' }}
-                disabled={isCurrent || !isOwner || checkingOut !== null}
-                onClick={() => handleChoose(plan.name)}
-              >
-                {isCurrent ? 'Current plan' : checkingOut === plan.name ? 'Redirecting…' : (
-                  <>Switch to {plan.name} <FiExternalLink size={14} /></>
-                )}
-              </button>
+              {isFree ? (
+                <button
+                  className="btn btn-secondary"
+                  style={{ width: '100%', justifyContent: 'center' }}
+                  disabled={isCurrent || !isOwner || switching}
+                  onClick={switchToFree}
+                >
+                  {isCurrent ? 'Current plan' : switching ? 'Please wait…' : 'Switch to Free'}
+                </button>
+              ) : (
+                <a
+                  className="btn btn-secondary"
+                  style={{ width: '100%', justifyContent: 'center', pointerEvents: isCurrent || !isOwner ? 'none' : 'auto', opacity: isCurrent || !isOwner ? 0.5 : 1 }}
+                  href={getUpgradeWhatsAppLink({ businessName: settings.businessName, planName: plan.name, price: plan.price })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {isCurrent ? 'Current plan' : <>Upgrade <FiMessageCircle size={14} /></>}
+                </a>
+              )}
             </div>
           );
         })}
       </div>
 
       <p className={styles.fineprint}>
-        Payments are handled securely by Paystack. You'll be redirected to a Paystack checkout page to complete payment.
+        Upgrading to a paid plan is handled directly over WhatsApp — tap the button above and we'll get you set up.
       </p>
     </div>
   );

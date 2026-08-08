@@ -4,7 +4,7 @@ import AuditLog from '../models/AuditLog.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 
-const PLAN_ORDER = ['Starter', 'Growth', 'Enterprise'];
+const PLAN_ORDER = ['Free', 'Starter', 'Growth', 'Enterprise'];
 
 export const listPlans = asyncHandler(async (req, res) => {
   const plans = await Plan.find().sort({ price: 1 });

@@ -3,13 +3,15 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import Modal from '../../../components/common/Modal';
 import Button from '../../../components/common/Button';
+import PlanLimitModal from '../../../components/common/PlanLimitModal';
 import { useProducts } from '../../../contexts/ProductContext';
-import { extractErrorMessage } from '../../../utils/apiError';
+import { extractErrorMessage, getPlanLimitDetails } from '../../../utils/apiError';
 
 export default function ProductModal({ open, onClose, product }) {
   const { addProduct, updateProduct, categories, suppliers } = useProducts();
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
   const [saving, setSaving] = useState(false);
+  const [limitDetails, setLimitDetails] = useState(null);
   const isEdit = !!product;
 
   useEffect(() => {
@@ -36,13 +38,20 @@ export default function ProductModal({ open, onClose, product }) {
       }
       onClose();
     } catch (err) {
-      toast.error(extractErrorMessage(err));
+      const limit = getPlanLimitDetails(err);
+      if (limit) {
+        onClose();
+        setLimitDetails(limit);
+      } else {
+        toast.error(extractErrorMessage(err));
+      }
     } finally {
       setSaving(false);
     }
   };
 
   return (
+    <>
     <Modal open={open} onClose={onClose} title={isEdit ? 'Edit product' : 'Add new product'} subtitle={isEdit ? product?.name : 'Add a product to your inventory'} width={560}
       footer={
         <>
@@ -113,5 +122,7 @@ export default function ProductModal({ open, onClose, product }) {
         </div>
       </form>
     </Modal>
+    <PlanLimitModal details={limitDetails} onClose={() => setLimitDetails(null)} />
+    </>
   );
 }
