@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "oxc"],
+  "rules": {
+    "react/rules-of-hooks": "error",
+    // Off, not just "allowConstantExport": every context in src/contexts/ intentionally
+    // colocates its Context, Provider, and useXContext() hook in one file — a standard,
+    // widely-used pattern. The only cost is slightly slower Fast Refresh on hook-only
+    // edits; splitting 17 files in two for that isn't worth the churn.
+    "react/only-export-components": "off"
+  }
+}
